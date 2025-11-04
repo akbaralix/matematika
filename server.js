@@ -75,7 +75,7 @@ bot.on("message", async (msg) => {
         reply_markup: {
           keyboard: [
             ["👥 A’zolar soni", "🏆 Reyting"],
-            ["⚙️ Sozlamalar", "Barchaga habar yuborish"],
+            ["Barchaga habar yuborish"],
           ],
           resize_keyboard: true,
           one_time_keyboard: false,
@@ -118,6 +118,7 @@ bot.on("message", async (msg) => {
     topUsers.forEach((user, i) => {
       msgText += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
     });
+
     bot.sendMessage(chatId, msgText);
   }
 
@@ -150,6 +151,22 @@ bot.on("message", async (msg) => {
 });
 
 // ====================== SERVER ======================
+
+app.post("/save-score", async (req, res) => {
+  const { user_id, name, avatar, score } = req.body;
+  const existing = await usersCollection.findOne({ user_id });
+
+  if (!existing) {
+    await usersCollection.insertOne({ user_id, name, avatar, score });
+  } else if (score > existing.score) {
+    await usersCollection.updateOne(
+      { user_id },
+      { $set: { score, name, avatar } }
+    );
+  }
+
+  res.sendStatus(200);
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server ${PORT} portda ishlayapti`);

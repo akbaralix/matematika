@@ -19,7 +19,6 @@
         <div class="control-container">
           <div class="togrijavob">✅ 0</div>
           <div class="xatolar">❌ 0</div>
-          <div class="time">⏳ 00</div>
         </div>
 
         <div class="game-bar">
@@ -30,6 +29,10 @@
             <span class="javob"></span>
             <span class="javob"></span>
             <span class="javob"></span>
+          </div>
+          <!-- javob uchun 5s vaqt -->
+          <div class="time-container">
+            <div class="time"></div>
           </div>
         </div>
 
@@ -102,9 +105,6 @@
           if (xato === 4) {
             alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
             saveScore();
-            document.getElementById("game-container").style.display = "none";
-            document.getElementById("menyu").style.display = "block";
-
             togri = 0;
             xato = 0;
             togrijavob.textContent = `✅ ${togri}`;
@@ -113,14 +113,67 @@
           }
 
           startgame();
+          startProgress();
         });
       });
+
+      function startgame() {
+        // savol yaratish
+        let random1 = Math.floor(Math.random() * 10);
+        let random2 = Math.floor(Math.random() * 10);
+        const amal = Math.random() < 0.5 ? "+" : "-";
+
+        if (amal === "-" && random1 < random2)
+          [random1, random2] = [random2, random1];
+
+        currentAnswer = amal === "+" ? random1 + random2 : random1 - random2;
+        randomnum1.textContent = `${random1} ${amal} ${random2} = ?`;
+
+        const variantlar = [
+          currentAnswer,
+          currentAnswer + Math.floor(Math.random() * 3) + 1,
+          currentAnswer - Math.floor(Math.random() * 3) - 1,
+        ].sort(() => Math.random() - 0.5);
+
+        javoblar.forEach((el, i) => (el.textContent = variantlar[i]));
+      }
+
+      let timer; // global
+
+      function startProgress() {
+        const bar = document.querySelector(".time");
+        clearTimeout(timer); // <--- eski timeout’ni tozalash
+
+        bar.style.transition = "none";
+        bar.style.width = "100%";
+
+        setTimeout(() => {
+          bar.style.transition = "width 5s linear";
+          bar.style.width = "0%";
+        }, 50);
+        if (xato === 4) {
+          alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
+          saveScore();
+          togri = 0;
+          xato = 0;
+          togrijavob.textContent = `✅ ${togri}`;
+          xatolar.textContent = `❌ ${xato}`;
+          return;
+        }
+        timer = setTimeout(() => {
+          xato++;
+          xatolar.textContent = `❌ ${xato}`;
+          startgame();
+          startProgress();
+        }, 5000);
+      }
 
       // 🔹 Boshlash tugmasi
       function boshlash() {
         document.getElementById("game-container").style.display = "block";
         document.getElementById("menyu").style.display = "none";
         startgame();
+        startProgress();
       }
 
       // 🔹 Statistika tugmasi
@@ -154,7 +207,6 @@
             const rankingList = document.getElementById("ranking-list");
             rankingList.innerHTML = "";
 
-            // Barcha foydalanuvchilarni score bo'yicha kamayish tartibida chiqarish
             data.forEach((user, i) => {
               const li = document.createElement("li");
               const img = user.avatar
