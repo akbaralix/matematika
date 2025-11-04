@@ -65,7 +65,10 @@ bot.on("message", async (msg) => {
           ],
         },
         reply_markup: {
-          keyboard: [["👥 A’zolar soni", "🏆 Reyting"], ["⚙️ Sozlamalar"]],
+          keyboard: [
+            ["👥 A’zolar soni", "🏆 Reyting"],
+            ["⚙️ Sozlamalar", "Barchaga habar yuborish"],
+          ],
           resize_keyboard: true,
           one_time_keyboard: false,
         },
@@ -108,6 +111,36 @@ bot.on("message", async (msg) => {
       msgText += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
     });
     bot.sendMessage(chatId, msgText);
+  }
+  if (text === "Barchaga habar yuborish") {
+    // Faqat admin ruxsatida ishlash
+    if (userId !== ADMIN_ID) return;
+
+    bot.sendMessage(
+      chatId,
+      "✏️ Iltimos, yubormoqchi bo‘lgan xabaringizni yozing:"
+    );
+
+    // Keyingi xabarni kutish
+    bot.once("message", async (msg2) => {
+      const broadcastText = msg2.text;
+
+      // Barcha foydalanuvchilarni olish
+      const allUsers = await usersCollection.find().toArray();
+
+      for (const user of allUsers) {
+        try {
+          await bot.sendMessage(user.user_id, broadcastText);
+        } catch (err) {
+          console.log(`❌ Xatolik: ${user.user_id} ga yuborilmadi.`);
+        }
+      }
+
+      bot.sendMessage(
+        chatId,
+        `✅ Xabar ${allUsers.length} foydalanuvchiga yuborildi!`
+      );
+    });
   }
 });
 
