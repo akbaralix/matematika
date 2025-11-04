@@ -98,6 +98,22 @@ body {
   border-radius: 12px;
 }
 
+.users {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+#username {
+  font-size: 20px;
+}
+
+.user-statistik img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
 .Orqaga {
   position: fixed;
   bottom: 20px;

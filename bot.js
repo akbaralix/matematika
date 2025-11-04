@@ -1,18 +1,51 @@
 import TelegramBot from "node-telegram-bot-api";
+import dotenv from "dotenv";
+import { MongoClient } from "mongodb";
 
-const TOKEN = "8449720717:AAFD-63utZlz0nzjo3Et8G1BJWbZBFOX-Fk";
+dotenv.config();
 
-const bot = new TelegramBot(TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TOKEN);
+const DATABASE_URL = process.env.DATABASE_URL;
+const ADMIN_ID = Number(process.env.ADMIN_ID);
 
-bot.on("message", (msg) => {
+const client = new MongoClient(DATABASE_URL);
+await client.connect();
+console.log("✅ MongoDB ulandi");
+
+const db = client.db("mydatabase");
+const usersCollection = db.collection("users");
+
+// /start komandasi
+bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  const text = msg.text;
+  const userId = msg.from.id;
+  const firstName = msg.from.first_name;
+  const lastName = msg.from.last_name || "";
 
-  if (text === "/start") {
-    bot.sendMessage(
-      chatId,
-      `*Salom ${msg.chat.first_name}! Matematik o'yini botiga xush kelibsiz!\n\nO'yinni boshlash uchun pastdagi tugmasni bosing!*`,
-      {
+  if (msg.text === "/start") {
+    const existingUser = await usersCollection.findOne({ user_id: userId });
+    if (!existingUser) {
+      await usersCollection.insertOne({
+        user_id: userId,
+        name: `${firstName} ${lastName}`.trim(),
+        username: msg.from.username || "",
+        joined_at: new Date(),
+        score: 0,
+      });
+    }
+
+    // Admin
+    if (userId === ADMIN_ID) {
+      bot.sendMessage(chatId, "🧮 Admin panel:", {
+        reply_markup: {
+          keyboard: [["👥 A’zolar soni", "🏆 Reyting"], ["⚙️ Sozlamalar"]],
+          resize_keyboard: true,
+          one_time_keyboard: false,
+        },
+      });
+    } else {
+      // Oddiy foydalanuvchi
+      bot.sendMessage(chatId, `👋 Salom *${firstName}*!`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
@@ -24,7 +57,31 @@ bot.on("message", (msg) => {
             ],
           ],
         },
-      }
-    );
+      });
+    }
   }
 });
+
+// Callback yoki input tugmalari (admin menyusi)
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (msg.text === "👥 A’zolar soni") {
+    const count = await usersCollection.countDocuments();
+    bot.sendMessage(chatId, `📊 Botda ${count} ta foydalanuvchi bor.`);
+  }
+
+  if (msg.text === "🏆 Reyting") {
+    const topUsers = await usersCollection
+      .find()
+      .sort({ score: -1 })
+      .limit(5)
+      .toArray();
+    let text = "🏆 Top foydalanuvchilar:\n\n";
+    topUsers.forEach((user, i) => {
+      text += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
+    });
+    bot.sendMessage(chatId, text);
+  }
+});
+a;

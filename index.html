@@ -7,67 +7,76 @@
     <title>Matematik</title>
   </head>
   <body>
+    <!-- 🔹 Asosiy menyu -->
     <div id="menyu" class="menyu">
       <button onclick="boshlash()">▶️ Boshlash</button>
       <button onclick="statistika()">📊 Statistika</button>
     </div>
-    <div id="game-container" class="game-container">
+
+    <!-- 🔹 O'yin container -->
+    <div id="game-container" class="game-container" style="display: none">
       <div class="container">
         <div class="control-container">
           <div class="togrijavob">✅ 0</div>
           <div class="xatolar">❌ 0</div>
           <div class="time">⏳ 00</div>
         </div>
+
         <div class="game-bar">
           <div class="randomnumber">
             <span id="randomnum1"></span>
           </div>
           <div class="variantlar">
-            <span id="javob" class="javob"></span>
-            <span id="javob" class="javob"></span>
-            <span id="javob" class="javob"></span>
+            <span class="javob"></span>
+            <span class="javob"></span>
+            <span class="javob"></span>
           </div>
         </div>
+
         <button class="Orqaga" onclick="location.reload()">🔙 Orqaga</button>
       </div>
     </div>
-    <div class="statistika-container">
+
+    <!-- 🔹 Statistika container -->
+    <div class="statistika-container" style="display: none">
       <h2>Statistika</h2>
       <div class="user-statistik">
-        <img src="" alt="user-img" />
-        <span id="username">Akbarali</span>
-        <p>To'g'ri javoblar soni: <span id="stat-togri">0</span></p>
-        <p>Xato javoblar soni: <span id="stat-xato">0</span></p>
+        <h3>Top foydalanuvchilar:</h3>
+        <ol id="ranking-list"></ol>
       </div>
       <button class="Orqaga" onclick="location.reload()">🔙 Orqaga</button>
     </div>
 
     <script>
+      // 🔹 Elementlar
       const randomnum1 = document.getElementById("randomnum1");
       const javoblar = document.querySelectorAll(".javob");
-      const timeDisplay = document.querySelector(".time");
+      const togrijavob = document.querySelector(".togrijavob");
+      const xatolar = document.querySelector(".xatolar");
 
       let togri = 0;
       let xato = 0;
-      let togrijavob = document.querySelector(".togrijavob");
-      let xatolar = document.querySelector(".xatolar");
+      let currentAnswer = null;
 
-      let currentAnswer = null; // global javob
+      // 🔹 Telegram WebApp foydalanuvchi ma'lumotlari
+      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+      const TELEGRAM_USER_ID = tgUser.id || 0;
+      const TELEGRAM_USER_NAME = `${tgUser.first_name || ""} ${
+        tgUser.last_name || ""
+      }`.trim();
+      const TELEGRAM_USER_AVATAR = tgUser.photo_url || "";
 
+      // 🔹 O'yinni boshlash
       function startgame() {
         let random1 = Math.floor(Math.random() * 10);
         let random2 = Math.floor(Math.random() * 10);
-
         const amal = Math.random() < 0.5 ? "+" : "-";
 
-        // kichik sondan katta sonni ayirmaslik
-        if (amal === "-" && random1 < random2) {
+        if (amal === "-" && random1 < random2)
           [random1, random2] = [random2, random1];
-        }
 
         currentAnswer = amal === "+" ? random1 + random2 : random1 - random2;
 
-        // misolni chiqarish
         randomnum1.textContent = `${random1} ${amal} ${random2} = ?`;
 
         const variantlar = [
@@ -76,12 +85,10 @@
           currentAnswer - Math.floor(Math.random() * 3) - 1,
         ].sort(() => Math.random() - 0.5);
 
-        javoblar.forEach((el, i) => {
-          el.textContent = variantlar[i];
-        });
+        javoblar.forEach((el, i) => (el.textContent = variantlar[i]));
       }
 
-      // javob bosilganda tekshirish
+      // 🔹 Javobni tekshirish
       javoblar.forEach((el) => {
         el.addEventListener("click", () => {
           if (parseInt(el.textContent) === currentAnswer) {
@@ -90,25 +97,73 @@
           } else {
             xato++;
             xatolar.textContent = `❌ ${xato}`;
-            if (xato === 4) {
-              localStorage.setItem("togri", togri);
-              alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
-
-              return;
-            }
           }
-          startgame(); // keyingi misolga o'tish
+
+          if (xato === 4) {
+            alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
+            saveScore();
+            document.getElementById("game-container").style.display = "none";
+            document.getElementById("menyu").style.display = "block";
+
+            togri = 0;
+            xato = 0;
+            togrijavob.textContent = `✅ ${togri}`;
+            xatolar.textContent = `❌ ${xato}`;
+            return;
+          }
+
+          startgame();
         });
       });
 
+      // 🔹 Boshlash tugmasi
       function boshlash() {
         document.getElementById("game-container").style.display = "block";
         document.getElementById("menyu").style.display = "none";
-        startgame(); // o‘yinni boshlash
+        startgame();
       }
+
+      // 🔹 Statistika tugmasi
       function statistika() {
         document.querySelector(".statistika-container").style.display = "block";
         document.getElementById("menyu").style.display = "none";
+        getRanking();
+      }
+
+      // 🔹 Score’ni serverga yuborish
+      function saveScore() {
+        if (!TELEGRAM_USER_ID) return;
+
+        fetch("https://matematikoyin.onrender.com/save-score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: TELEGRAM_USER_ID,
+            score: togri,
+            name: TELEGRAM_USER_NAME,
+            avatar: TELEGRAM_USER_AVATAR,
+          }),
+        }).catch((err) => console.log(err));
+      }
+
+      // 🔹 Reytingni olish va ko'rsatish
+      function getRanking() {
+        fetch("https://matematikoyin.onrender.com/get-ranking")
+          .then((res) => res.json())
+          .then((data) => {
+            const rankingList = document.getElementById("ranking-list");
+            rankingList.innerHTML = "";
+
+            data.forEach((user, i) => {
+              const li = document.createElement("li");
+              const img = user.avatar
+                ? `<img src="${user.avatar}" alt="avatar" style="width:30px;height:30px;border-radius:50%;margin-right:5px;">`
+                : "";
+              li.innerHTML = `${i + 1}. ${img} ${user.name} — ${user.score} ✅`;
+              rankingList.appendChild(li);
+            });
+          })
+          .catch((err) => console.log(err));
       }
     </script>
   </body>
