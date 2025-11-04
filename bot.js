@@ -19,7 +19,7 @@ bot.on("message", (msg) => {
             [
               {
                 text: "🎮 O'yinni boshlash",
-                web_app: { url: "https://matematikoyin.onrender.com" },
+                web_app: { url: "https://matematika.onrender.com" },
               },
             ],
           ],
@@ -28,3 +28,4 @@ bot.on("message", (msg) => {
     );
   }
 });
+
