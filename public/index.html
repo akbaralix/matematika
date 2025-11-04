@@ -134,7 +134,7 @@
       function saveScore() {
         if (!TELEGRAM_USER_ID) return;
 
-        fetch("https://matematikoyin.onrender.com/save-score", {
+        fetch("https://matematika.onrender.com/save-score", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -148,12 +148,13 @@
 
       // 🔹 Reytingni olish va ko'rsatish
       function getRanking() {
-        fetch("https://matematikoyin.onrender.com/get-ranking")
+        fetch("https://matematika.onrender.com/get-ranking")
           .then((res) => res.json())
           .then((data) => {
             const rankingList = document.getElementById("ranking-list");
             rankingList.innerHTML = "";
 
+            // Barcha foydalanuvchilarni score bo'yicha kamayish tartibida chiqarish
             data.forEach((user, i) => {
               const li = document.createElement("li");
               const img = user.avatar
