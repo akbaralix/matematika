@@ -2,14 +2,20 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
+import path from "path";
 
 dotenv.config();
-const app = express();
+const app = express(); // <-- app ni birinchi e'lon qilamiz
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(path.resolve(), "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(path.resolve(), "public", "index.html"));
+});
 
 const client = new MongoClient(DATABASE_URL);
 await client.connect();

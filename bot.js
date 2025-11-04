@@ -1,14 +1,21 @@
 import TelegramBot from "node-telegram-bot-api";
-<<<<<<< HEAD
+import express from "express";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 
 dotenv.config();
 
-const bot = new TelegramBot(process.env.TOKEN);
+const TOKEN = process.env.TOKEN;
 const DATABASE_URL = process.env.DATABASE_URL;
 const ADMIN_ID = Number(process.env.ADMIN_ID);
+const URL = process.env.URL || "https://matematika.onrender.com"; // Render URL
+const PORT = process.env.PORT || 3000;
 
+const bot = new TelegramBot(TOKEN);
+const app = express();
+app.use(express.json());
+
+// MongoDB ulanishi
 const client = new MongoClient(DATABASE_URL);
 await client.connect();
 console.log("✅ MongoDB ulandi");
@@ -16,36 +23,24 @@ console.log("✅ MongoDB ulandi");
 const db = client.db("mydatabase");
 const usersCollection = db.collection("users");
 
-// /start komandasi
-bot.on("message", async (msg) => {
-=======
-import express from "express";
-
-const TOKEN = "8449720717:AAFD-63utZlz0nzjo3Et8G1BJWbZBFOX-Fk";
-const URL = "https://matematika.onrender.com"; // Render sayting URL manzili
-const PORT = process.env.PORT || 3000;
-
-const bot = new TelegramBot(TOKEN);
-const app = express();
-
+// Telegram webhook sozlash
 bot.setWebHook(`${URL}/bot${TOKEN}`);
 
-app.use(express.json());
+// Telegram webhook endpoint
 app.post(`/bot${TOKEN}`, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
 });
 
 // /start komandasi
-bot.on("message", (msg) => {
->>>>>>> f151c1cbdcbb11cc1499011d04d148f32cc20183
+bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const firstName = msg.from.first_name;
   const lastName = msg.from.last_name || "";
+  const text = msg.text;
 
-<<<<<<< HEAD
-  if (msg.text === "/start") {
+  if (text === "/start") {
     const existingUser = await usersCollection.findOne({ user_id: userId });
     if (!existingUser) {
       await usersCollection.insertOne({
@@ -57,9 +52,18 @@ bot.on("message", (msg) => {
       });
     }
 
-    // Admin
     if (userId === ADMIN_ID) {
       bot.sendMessage(chatId, "🧮 Admin panel:", {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🎮 O'yinni boshlash",
+                web_app: { url: URL },
+              },
+            ],
+          ],
+        },
         reply_markup: {
           keyboard: [["👥 A’zolar soni", "🏆 Reyting"], ["⚙️ Sozlamalar"]],
           resize_keyboard: true,
@@ -67,57 +71,47 @@ bot.on("message", (msg) => {
         },
       });
     } else {
-      // Oddiy foydalanuvchi
-      bot.sendMessage(chatId, `👋 Salom *${firstName}*!`, {
-=======
-  if (text === "/start") {
-    bot.sendMessage(
-      chatId,
-      `*Salom ${msg.chat.first_name}! Matematik o'yini botiga xush kelibsiz!\n\nO'yinni boshlash uchun pastdagi tugmani bosing!*`,
-      {
->>>>>>> f151c1cbdcbb11cc1499011d04d148f32cc20183
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "🎮 O'yinni boshlash",
-                web_app: { url: "https://matematika.onrender.com" },
-              },
+      bot.sendMessage(
+        chatId,
+        `*Salom ${firstName}! Matematik o'yini botiga xush kelibsiz!\n\nO'yinni boshlash uchun pastdagi tugmani bosing!*`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "🎮 O'yinni boshlash",
+                  web_app: { url: URL },
+                },
+              ],
             ],
-          ],
-        },
-      });
+          },
+        }
+      );
     }
   }
-});
 
-<<<<<<< HEAD
-// Callback yoki input tugmalari (admin menyusi)
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (msg.text === "👥 A’zolar soni") {
+  // Admin tugmalari
+  if (text === "👥 A’zolar soni") {
     const count = await usersCollection.countDocuments();
     bot.sendMessage(chatId, `📊 Botda ${count} ta foydalanuvchi bor.`);
   }
 
-  if (msg.text === "🏆 Reyting") {
+  if (text === "🏆 Reyting") {
     const topUsers = await usersCollection
       .find()
       .sort({ score: -1 })
       .limit(5)
       .toArray();
-    let text = "🏆 Top foydalanuvchilar:\n\n";
+    let msgText = "🏆 Top foydalanuvchilar:\n\n";
     topUsers.forEach((user, i) => {
-      text += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
+      msgText += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
     });
-    bot.sendMessage(chatId, text);
+    bot.sendMessage(chatId, msgText);
   }
 });
-a;
-=======
+
+// Server ishga tushurish
 app.listen(PORT, () => {
   console.log(`✅ Server ${PORT} portda ishlayapti`);
 });
->>>>>>> f151c1cbdcbb11cc1499011d04d148f32cc20183
