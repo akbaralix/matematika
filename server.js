@@ -1,22 +1,22 @@
+import TelegramBot from "node-telegram-bot-api";
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import path from "path";
 
 dotenv.config();
-const app = express(); // <-- app ni birinchi e'lon qilamiz
-const PORT = process.env.PORT || 3000;
+
+const TOKEN = process.env.TOKEN;
 const DATABASE_URL = process.env.DATABASE_URL;
+const ADMIN_ID = Number(process.env.ADMIN_ID);
+const URL = process.env.URL || "https://matematika.onrender.com"; // Render URL
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+const bot = new TelegramBot(TOKEN);
+const app = express();
 app.use(express.json());
-app.use(express.static(path.join(path.resolve(), "public")));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(path.resolve(), "public", "index.html"));
-});
-
+// MongoDB ulanishi
 const client = new MongoClient(DATABASE_URL);
 await client.connect();
 console.log("✅ MongoDB ulandi");
@@ -24,50 +24,133 @@ console.log("✅ MongoDB ulandi");
 const db = client.db("mydatabase");
 const usersCollection = db.collection("users");
 
-// 🔹 Score va avatar saqlash
-app.post("/save-score", async (req, res) => {
-  try {
-    const { user_id, score, name, avatar } = req.body;
-    if (!user_id || score == null)
-      return res.status(400).send({ error: "Invalid data" });
+// ====================== EXPRESS ROUTES ======================
 
-    const user = await usersCollection.findOne({ user_id });
-    if (user) {
-      const newScore = Math.max(user.score || 0, score);
-      await usersCollection.updateOne(
-        { user_id },
-        { $set: { score: newScore, name, avatar } }
-      );
-    } else {
+// Static fayllar (index.html)
+app.use(express.static(path.join(path.resolve(), "public")));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(path.resolve(), "public", "index.html"));
+});
+
+// Telegram webhook endpoint
+bot.setWebHook(`${URL}/bot${TOKEN}`);
+app.post(`/bot${TOKEN}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// ====================== TELEGRAM BOT ======================
+
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const firstName = msg.from.first_name;
+  const lastName = msg.from.last_name || "";
+  const text = msg.text;
+
+  if (text === "/start") {
+    const existingUser = await usersCollection.findOne({ user_id: userId });
+    if (!existingUser) {
       await usersCollection.insertOne({
-        user_id,
-        name,
-        avatar,
-        score,
+        user_id: userId,
+        name: `${firstName} ${lastName}`.trim(),
+        username: msg.from.username || "",
         joined_at: new Date(),
+        score: 0,
       });
     }
 
-    res.send({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ error: "Server error" });
+    if (userId === ADMIN_ID) {
+      bot.sendMessage(chatId, "🧮 Admin panel:", {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "🎮 O'yinni boshlash",
+                web_app: { url: URL },
+              },
+            ],
+          ],
+        },
+        reply_markup: {
+          keyboard: [
+            ["👥 A’zolar soni", "🏆 Reyting"],
+            ["⚙️ Sozlamalar", "Barchaga habar yuborish"],
+          ],
+          resize_keyboard: true,
+          one_time_keyboard: false,
+        },
+      });
+    } else {
+      bot.sendMessage(
+        chatId,
+        `*Salom ${firstName}! Matematik o'yini botiga xush kelibsiz!\n\nO'yinni boshlash uchun pastdagi tugmani bosing!*`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "🎮 O'yinni boshlash",
+                  web_app: { url: URL },
+                },
+              ],
+            ],
+          },
+        }
+      );
+    }
   }
-});
 
-// 🔹 Reytingni olish
-app.get("/get-ranking", async (req, res) => {
-  try {
+  // Admin tugmalari
+  if (text === "👥 A’zolar soni") {
+    const count = await usersCollection.countDocuments();
+    bot.sendMessage(chatId, `📊 Botda ${count} ta foydalanuvchi bor.`);
+  }
+
+  if (text === "🏆 Reyting") {
     const topUsers = await usersCollection
       .find()
       .sort({ score: -1 })
-      .limit(10)
+      .limit(5)
       .toArray();
-    res.send(topUsers);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ error: "Server error" });
+    let msgText = "🏆 Top foydalanuvchilar:\n\n";
+    topUsers.forEach((user, i) => {
+      msgText += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
+    });
+    bot.sendMessage(chatId, msgText);
+  }
+
+  if (text === "Barchaga habar yuborish") {
+    if (userId !== ADMIN_ID) return;
+
+    bot.sendMessage(
+      chatId,
+      "✏️ Iltimos, yubormoqchi bo‘lgan xabaringizni yozing:"
+    );
+
+    bot.once("message", async (msg2) => {
+      const broadcastText = msg2.text;
+      const allUsers = await usersCollection.find().toArray();
+
+      for (const user of allUsers) {
+        try {
+          await bot.sendMessage(user.user_id, broadcastText);
+        } catch (err) {
+          console.log(`❌ Xatolik: ${user.user_id} ga yuborilmadi.`);
+        }
+      }
+
+      bot.sendMessage(
+        chatId,
+        `✅ Xabar ${allUsers.length} foydalanuvchiga yuborildi!`
+      );
+    });
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT} ✅`));
+// ====================== SERVER ======================
+
+app.listen(PORT, () => {
+  console.log(`✅ Server ${PORT} portda ishlayapti`);
+});
