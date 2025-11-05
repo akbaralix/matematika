@@ -134,12 +134,12 @@
             }
 
             const result = await response.json();
-            console.log("✅ Ball muvaffaqiyatli saqlandi:", result);
+            alert("✅ Ball muvaffaqiyatli saqlandi:", result);
           } catch (err) {
-            console.error("❌ Ball saqlashda xatolik:", err);
+            alert("❌ Ball saqlashda xatolik:", err);
           }
         } else {
-          console.log("⚠️ Telegram foydalanuvchi ID topilmadi");
+          alert("⚠️ Telegram foydalanuvchi ID topilmadi");
         }
 
         document.querySelector(".qaytaBoshlash").style.display = "block";
