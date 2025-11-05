@@ -31,10 +31,14 @@
             <span class="javob"></span>
           </div>
 
-          <button class="qaytaBoshlash" onclick="qaytaBoshlash()">
+          <button
+            class="qaytaBoshlash"
+            onclick="qaytaBoshlash()"
+            style="display: none"
+          >
             Qayta boshlash
           </button>
-          <!-- javob uchun 5s vaqt -->
+
           <div class="time-container">
             <div class="time"></div>
           </div>
@@ -49,7 +53,7 @@
       <h2>Statistika</h2>
       <div class="user-statistik">
         <h3>Top foydalanuvchilar:</h3>
-        <ol id="ranking-list"></ol>
+        <div id="ranking-list"></div>
       </div>
       <button class="Orqaga" onclick="location.reload()">🔙 Orqaga</button>
     </div>
@@ -60,10 +64,10 @@
       const javoblar = document.querySelectorAll(".javob");
       const togrijavob = document.querySelector(".togrijavob");
       const xatolar = document.querySelector(".xatolar");
-
       let togri = 0;
       let xato = 0;
       let currentAnswer = null;
+      let timer;
 
       // 🔹 Telegram WebApp foydalanuvchi ma'lumotlari
       const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
@@ -73,31 +77,9 @@
       }`.trim();
       const TELEGRAM_USER_AVATAR = tgUser.photo_url || "";
 
-      // 🔹 O'yinni boshlash
-      function startgame() {
-        let random1 = Math.floor(Math.random() * 10);
-        let random2 = Math.floor(Math.random() * 10);
-        const amal = Math.random() < 0.5 ? "+" : "-";
-
-        if (amal === "-" && random1 < random2)
-          [random1, random2] = [random2, random1];
-
-        currentAnswer = amal === "+" ? random1 + random2 : random1 - random2;
-
-        randomnum1.textContent = `${random1} ${amal} ${random2} = ?`;
-
-        const variantlar = [
-          currentAnswer,
-          currentAnswer + Math.floor(Math.random() * 3) + 1,
-          currentAnswer - Math.floor(Math.random() * 3) - 1,
-        ].sort(() => Math.random() - 0.5);
-
-        javoblar.forEach((el, i) => (el.textContent = variantlar[i]));
-      }
-
       // 🔹 Javobni tekshirish
       javoblar.forEach((el) => {
-        el.addEventListener("click", async () => {
+        el.addEventListener("click", () => {
           if (parseInt(el.textContent) === currentAnswer) {
             togri++;
             togrijavob.textContent = `✅ ${togri}`;
@@ -107,35 +89,39 @@
           }
 
           if (xato === 4) {
-            clearTimeout(timer); // progress barni to‘xtatish
-            alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
-
-            if (TELEGRAM_USER_ID) {
-              try {
-                await fetch("https://matematika.onrender.com/save-score", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    user_id: TELEGRAM_USER_ID,
-                    score: togri,
-                    name: TELEGRAM_USER_NAME,
-                    avatar: TELEGRAM_USER_AVATAR,
-                  }),
-                });
-              } catch (err) {
-                console.log("❌ Bal saqlashda xatolik:", err);
-              }
-            }
-
-            document.querySelector(".qaytaBoshlash").style.display = "flex"; // tugmani ko‘rsatish
-            return; // shu yerda o‘yinni to‘xtatish
+            gameOver();
+            return;
           }
 
-          // faqat xato < 4 bo‘lsa progress boshlanadi
           startgame();
           startProgress();
         });
       });
+
+      // 🔹 O'yin tugadi
+      async function gameOver() {
+        clearTimeout(timer);
+        alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
+
+        if (TELEGRAM_USER_ID) {
+          try {
+            await fetch("https://matematika.onrender.com/save-score", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: TELEGRAM_USER_ID,
+                score: togri,
+                name: TELEGRAM_USER_NAME,
+                avatar: TELEGRAM_USER_AVATAR,
+              }),
+            });
+          } catch (err) {
+            console.log("❌ Bal saqlashda xatolik:", err);
+          }
+        }
+
+        document.querySelector(".qaytaBoshlash").style.display = "flex";
+      }
 
       // 🔹 Qayta boshlash tugmasi
       function qaytaBoshlash() {
@@ -148,8 +134,8 @@
         startProgress();
       }
 
+      // 🔹 Savol yaratish
       function startgame() {
-        // savol yaratish
         let random1 = Math.floor(Math.random() * 10);
         let random2 = Math.floor(Math.random() * 10);
         const amal = Math.random() < 0.5 ? "+" : "-";
@@ -169,11 +155,10 @@
         javoblar.forEach((el, i) => (el.textContent = variantlar[i]));
       }
 
-      let timer; // global
-
+      // 🔹 Progress bar va vaqt
       function startProgress() {
         const bar = document.querySelector(".time");
-        clearTimeout(timer); // <--- eski timeout’ni tozalash
+        clearTimeout(timer);
 
         bar.style.transition = "none";
         bar.style.width = "100%";
@@ -182,19 +167,14 @@
           bar.style.transition = "width 5s linear";
           bar.style.width = "0%";
         }, 50);
-        if (xato === 4) {
-          alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
-          saveScore();
-          togri = 0;
-          xato = 0;
-          togrijavob.textContent = `✅ ${togri}`;
-          xatolar.textContent = `❌ ${xato}`;
 
-          return;
-        }
         timer = setTimeout(() => {
           xato++;
           xatolar.textContent = `❌ ${xato}`;
+          if (xato === 4) {
+            gameOver();
+            return;
+          }
           startgame();
           startProgress();
         }, 5000);
@@ -209,70 +189,58 @@
       }
 
       // 🔹 Statistika tugmasi
-      function statistika() {
-        document.querySelector(".statistika-container").style.display = "block";
+      async function statistika() {
         document.getElementById("menyu").style.display = "none";
-        getRanking();
+        document.querySelector(".statistika-container").style.display = "block";
+        await getRanking();
       }
 
-      // 🔹 Score’ni serverga yuborish
-      function saveScore() {
-        if (!TELEGRAM_USER_ID) return;
+      // 🔹 Reytingni olish
+      async function getRanking() {
+        const rankingList = document.getElementById("ranking-list");
+        rankingList.innerHTML = "<p>Yuklanmoqda...</p>";
 
-        fetch("https://matematika.onrender.com/save-score", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: TELEGRAM_USER_ID,
-            score: togri,
-            name: TELEGRAM_USER_NAME,
-            avatar: TELEGRAM_USER_AVATAR,
-          }),
-        }).catch((err) => console.log(err));
-      }
+        try {
+          const res = await fetch(
+            "https://matematika.onrender.com/get-ranking"
+          );
+          const data = await res.json();
 
-      // 🔹 Reytingni olish va ko'rsatish
-      function getRanking() {
-        fetch("https://matematika.onrender.com/get-ranking")
-          .then((res) => res.json())
-          .then((data) => {
-            const rankingList = document.getElementById("ranking-list");
-            rankingList.innerHTML = "";
+          rankingList.innerHTML = "";
+          let userRank = null;
+          let totalUsers = data.length;
 
-            let userRank = null; // foydalanuvchining o‘rni
-            let totalUsers = data.length; // umumiy foydalanuvchi soni
+          data.forEach((user, i) => {
+            const li = document.createElement("li");
+            const img = user.avatar
+              ? `<img src="${user.avatar}" alt="avatar" style="width:30px;height:30px;border-radius:50%;margin-right:5px;">`
+              : "";
+            const username = user.username ? `(@${user.username})` : "";
+            li.innerHTML = `${i + 1}. ${img} <b>${
+              user.name
+            }</b> ${username} — ${user.score} ✅`;
+            rankingList.appendChild(li);
 
-            data.forEach((user, i) => {
-              const li = document.createElement("li");
-              const img = user.avatar
-                ? `<img src="${user.avatar}" alt="avatar" style="width:30px;height:30px;border-radius:50%;margin-right:5px;">`
-                : "";
-              const username = user.username ? `(@${user.username})` : "";
-              li.innerHTML = `${i + 1}. ${img} <b>${
-                user.name
-              }</b> ${username} — ${user.score} ✅`;
-              rankingList.appendChild(li);
+            if (user.user_id === TELEGRAM_USER_ID) userRank = i + 1;
+          });
 
-              // agar foydalanuvchi aynan shu bo‘lsa, rankni saqlab qo‘yamiz
-              if (user.user_id === TELEGRAM_USER_ID) {
-                userRank = i + 1;
-              }
-            });
+          const userStat = document.createElement("div");
+          userStat.classList.add("ranking-list");
+          userStat.style.marginTop = "15px";
+          userStat.style.fontWeight = "bold";
 
-            // 🔹 Foydalanuvchi o‘z o‘rnini yuqorida ko‘rishi uchun
-            const userStat = document.createElement("div");
-            userStat.style.marginTop = "15px";
-            userStat.style.fontWeight = "bold";
+          if (userRank) {
+            userStat.innerHTML = `⭐ Sizning o‘rningiz: ${userRank}-o‘rin / ${totalUsers} ta foydalanuvchi orasida`;
+          } else {
+            userStat.innerHTML = `Siz hali reytingda yo‘qsiz 😢 O‘yin o‘ynab ko‘proq ball to‘plang!`;
+          }
 
-            if (userRank) {
-              userStat.innerHTML = `⭐ Sizning o‘rningiz: ${userRank}-o‘rin / ${totalUsers} ta foydalanuvchi orasida`;
-            } else {
-              userStat.innerHTML = `Siz hali reytingda yo‘qsiz 😢 O‘yin o‘ynab ko‘proq ball to‘plang!`;
-            }
-
-            rankingList.parentElement.appendChild(userStat);
-          })
-          .catch((err) => console.log(err));
+          rankingList.parentElement.appendChild(userStat);
+        } catch (err) {
+          rankingList.innerHTML =
+            "<p>❌ Reytingni olishda xatolik yuz berdi.</p>";
+          console.log(err);
+        }
       }
     </script>
   </body>
