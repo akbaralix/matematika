@@ -56,7 +56,6 @@ body {
   max-width: 500px;
   width: 100%;
   background-color: rgb(38, 19, 112);
-
   margin: 0 auto;
 }
 .randomnumber {
@@ -104,6 +103,21 @@ body {
   );
 
   border-radius: 12px;
+}
+.qaytaBoshlash {
+  display: none;
+  margin-top: 20px;
+  margin-left: 30px;
+  padding: 15px 20px;
+  width: 80%;
+  font-size: 20px;
+  font-weight: 600;
+  background-color: rgb(100, 100, 153);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center; /* text ham markazda bo‘lsin */
 }
 
 .statistika-container {

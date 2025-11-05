@@ -30,6 +30,10 @@
             <span class="javob"></span>
             <span class="javob"></span>
           </div>
+
+          <button class="qaytaBoshlash" onclick="qaytaBoshlash()">
+            Qayta boshlash
+          </button>
           <!-- javob uchun 5s vaqt -->
           <div class="time-container">
             <div class="time"></div>
@@ -93,7 +97,7 @@
 
       // 🔹 Javobni tekshirish
       javoblar.forEach((el) => {
-        el.addEventListener("click", () => {
+        el.addEventListener("click", async () => {
           if (parseInt(el.textContent) === currentAnswer) {
             togri++;
             togrijavob.textContent = `✅ ${togri}`;
@@ -103,19 +107,46 @@
           }
 
           if (xato === 4) {
+            clearTimeout(timer); // progress barni to‘xtatish
             alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
-            saveScore();
-            togri = 0;
-            xato = 0;
-            togrijavob.textContent = `✅ ${togri}`;
-            xatolar.textContent = `❌ ${xato}`;
-            return;
+
+            if (TELEGRAM_USER_ID) {
+              try {
+                await fetch("https://matematika.onrender.com/save-score", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    user_id: TELEGRAM_USER_ID,
+                    score: togri,
+                    name: TELEGRAM_USER_NAME,
+                    avatar: TELEGRAM_USER_AVATAR,
+                  }),
+                });
+              } catch (err) {
+                console.log("❌ Bal saqlashda xatolik:", err);
+              }
+            }
+
+            document.querySelector(".qaytaBoshlash").style.display = "flex"; // tugmani ko‘rsatish
+            return; // shu yerda o‘yinni to‘xtatish
           }
 
+          // faqat xato < 4 bo‘lsa progress boshlanadi
           startgame();
           startProgress();
         });
       });
+
+      // 🔹 Qayta boshlash tugmasi
+      function qaytaBoshlash() {
+        togri = 0;
+        xato = 0;
+        togrijavob.textContent = `✅ ${togri}`;
+        xatolar.textContent = `❌ ${xato}`;
+        document.querySelector(".qaytaBoshlash").style.display = "none";
+        startgame();
+        startProgress();
+      }
 
       function startgame() {
         // savol yaratish
@@ -158,6 +189,7 @@
           xato = 0;
           togrijavob.textContent = `✅ ${togri}`;
           xatolar.textContent = `❌ ${xato}`;
+
           return;
         }
         timer = setTimeout(() => {

@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import path from "path";
+import cors from "cors";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 const bot = new TelegramBot(TOKEN);
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 // MongoDB ulanishi
 const client = new MongoClient(DATABASE_URL);
