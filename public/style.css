@@ -107,20 +107,6 @@ body {
 
   border-radius: 12px;
 }
-.qaytaBoshlash {
-  margin-top: 20px;
-  margin-left: 30px;
-  padding: 15px 20px;
-  width: 80%;
-  font-size: 20px;
-  font-weight: 600;
-  background-color: rgb(100, 100, 153);
-  border: none;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: center; /* text ham markazda bo‘lsin */
-}
 
 .statistika-container {
   display: none;
@@ -175,4 +161,23 @@ body {
   border: none;
   color: white;
   padding: 10px 15px;
+}
+.game-end {
+  display: none;
+  margin: 30px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qaytaBoshlash {
+  padding: 15px 20px;
+  width: 80%;
+  font-size: 20px;
+  font-weight: 600;
+  background-color: rgb(100, 100, 153);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
 }

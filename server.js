@@ -161,6 +161,10 @@ bot.on("message", async (msg) => {
 // Foydalanuvchi ballini saqlash
 app.post("/save-score", async (req, res) => {
   const { user_id, name, avatar, score } = req.body;
+
+  // user_id bo‘lmasa saqlashni to‘xtatish
+  if (!user_id) return res.status(400).json({ error: "User ID yo‘q" });
+
   const existing = await usersCollection.findOne({ user_id });
 
   if (!existing) {
