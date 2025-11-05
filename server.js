@@ -63,6 +63,16 @@ bot.on("message", async (msg) => {
     if (userId === ADMIN_ID) {
       bot.sendMessage(chatId, "🧮 Admin panel:", {
         reply_markup: {
+          keyboard: [
+            ["👥 A’zolar soni", "🏆 Reyting"],
+            ["Barchaga habar yuborish"],
+          ],
+          resize_keyboard: true,
+        },
+      });
+
+      bot.sendMessage(chatId, "🎮 O'yinni boshlash uchun tugmani bosing:", {
+        reply_markup: {
           inline_keyboard: [
             [
               {
@@ -71,14 +81,6 @@ bot.on("message", async (msg) => {
               },
             ],
           ],
-        },
-        reply_markup: {
-          keyboard: [
-            ["👥 A’zolar soni", "🏆 Reyting"],
-            ["Barchaga habar yuborish"],
-          ],
-          resize_keyboard: true,
-          one_time_keyboard: false,
         },
       });
     } else {
@@ -142,7 +144,7 @@ bot.on("message", async (msg) => {
         }
       }
 
-      bot.sendMessage(
+      return bot.sendMessage(
         chatId,
         `✅ Xabar ${allUsers.length} foydalanuvchiga yuborildi!`
       );
@@ -152,6 +154,9 @@ bot.on("message", async (msg) => {
 
 // ====================== SERVER ======================
 
+// ====================== SERVER ======================
+
+// Foydalanuvchi ballini saqlash
 app.post("/save-score", async (req, res) => {
   const { user_id, name, avatar, score } = req.body;
   const existing = await usersCollection.findOne({ user_id });
@@ -166,6 +171,17 @@ app.post("/save-score", async (req, res) => {
   }
 
   res.sendStatus(200);
+});
+
+// 🔹 Reyting olish (shu yo‘q edi!)
+app.get("/get-ranking", async (req, res) => {
+  try {
+    const users = await usersCollection.find().sort({ score: -1 }).toArray();
+    res.json(users);
+  } catch (err) {
+    console.error("❌ Reyting olishda xatolik:", err);
+    res.status(500).json({ error: "Server xatosi" });
+  }
 });
 
 app.listen(PORT, () => {

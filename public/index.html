@@ -207,14 +207,38 @@
             const rankingList = document.getElementById("ranking-list");
             rankingList.innerHTML = "";
 
+            let userRank = null; // foydalanuvchining o‘rni
+            let totalUsers = data.length; // umumiy foydalanuvchi soni
+
             data.forEach((user, i) => {
               const li = document.createElement("li");
               const img = user.avatar
                 ? `<img src="${user.avatar}" alt="avatar" style="width:30px;height:30px;border-radius:50%;margin-right:5px;">`
                 : "";
-              li.innerHTML = `${i + 1}. ${img} ${user.name} — ${user.score} ✅`;
+              const username = user.username ? `(@${user.username})` : "";
+              li.innerHTML = `${i + 1}. ${img} <b>${
+                user.name
+              }</b> ${username} — ${user.score} ✅`;
               rankingList.appendChild(li);
+
+              // agar foydalanuvchi aynan shu bo‘lsa, rankni saqlab qo‘yamiz
+              if (user.user_id === TELEGRAM_USER_ID) {
+                userRank = i + 1;
+              }
             });
+
+            // 🔹 Foydalanuvchi o‘z o‘rnini yuqorida ko‘rishi uchun
+            const userStat = document.createElement("div");
+            userStat.style.marginTop = "15px";
+            userStat.style.fontWeight = "bold";
+
+            if (userRank) {
+              userStat.innerHTML = `⭐ Sizning o‘rningiz: ${userRank}-o‘rin / ${totalUsers} ta foydalanuvchi orasida`;
+            } else {
+              userStat.innerHTML = `Siz hali reytingda yo‘qsiz 😢 O‘yin o‘ynab ko‘proq ball to‘plang!`;
+            }
+
+            rankingList.parentElement.appendChild(userStat);
           })
           .catch((err) => console.log(err));
       }
