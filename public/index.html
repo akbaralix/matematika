@@ -101,8 +101,8 @@
       // 🔹 O'yin tugadi
       async function gameOver() {
         clearTimeout(timer);
-        alert(`O'yin tugadi! To'g'ri javoblar soni: ${togri}`);
 
+        // ballni serverga yuborish
         if (TELEGRAM_USER_ID) {
           try {
             await fetch("https://matematika.onrender.com/save-score", {
