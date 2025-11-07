@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <button class="Orqaga" onclick="location.reload()">🔙 Orqaga</button>
+        <button class="Orqaga" onclick="window.location.href = 'index.html'">
       </div>
     </div>
 
@@ -59,7 +59,9 @@
         <h3>Top foydalanuvchilar:</h3>
         <div id="ranking-list"></div>
       </div>
-      <button class="Orqaga" onclick="location.reload()">🔙 Orqaga</button>
+      <button class="Orqaga" onclick="window.location.href = 'index.html'">
+        🔙 Orqaga
+      </button>
     </div>
 
     <script>
@@ -251,6 +253,7 @@
           const totalUsers = data.length;
 
           data.forEach((user, i) => {
+            if (!user.score || user.score === 0) return;
             const li = document.createElement("li");
             li.style.display = "flex";
             li.style.alignItems = "center";
@@ -260,23 +263,37 @@
             const img = document.createElement("img");
             img.src = user.avatar || "";
             img.alt = "avatar";
-            img.style.width = "30px";
-            img.style.height = "30px";
+            img.style.width = "45px";
+            img.style.height = "45px";
             img.style.borderRadius = "50%";
             img.style.marginRight = "10px";
             if (!user.avatar) img.style.display = "none";
 
+            const reytingNum = document.createElement("span");
+            reytingNum.classList.add("reytingnum");
+            reytingNum.innerHTML = `${i + 1}`;
+            
+            if (reytingNum.textContent === "1") {
+  reytingNum.textContent = "🥇";
+} else if (reytingNum.textContent === "2") {
+  reytingNum.textContent = "🥈";
+} else if (reytingNum.textContent === "3") {
+  reytingNum.textContent = "🥉";
+}
+
             // foydalanuvchi ismi va username
             const nameSpan = document.createElement("span");
-            nameSpan.innerHTML = `${i + 1} <b>${user.name || "NoName"}</b> ${
-              user.username ? `(@${user.username})` : ""
-            }`;
+            nameSpan.classList.add("username");
+            nameSpan.innerHTML = ` <b>${user.name || "NoName"}</b>
+
+            `;
 
             // score
             const scoreSpan = document.createElement("span");
             scoreSpan.style.marginLeft = "auto";
             scoreSpan.textContent = `${user.score ?? 0} ✅`;
 
+            li.appendChild(reytingNum);
             li.appendChild(img);
             li.appendChild(nameSpan);
             li.appendChild(scoreSpan);

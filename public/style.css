@@ -148,10 +148,10 @@ body {
   gap: 22px;
 }
 
-#username {
+.username {
+  margin: 0 auto;
   font-size: 20px;
 }
-
 .Orqaga {
   position: fixed;
   bottom: 20px;
@@ -180,4 +180,17 @@ body {
   color: white;
   border-radius: 8px;
   cursor: pointer;
+}
+.reytingnum {
+  background-color: rgba(53, 53, 148, 0.947);
+  padding: 10px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 15px;
+  border: 1px solid white;
+  justify-content: center;
 }
