@@ -49,6 +49,8 @@
         </div>
 
         <button class="Orqaga" onclick="window.location.href = 'index.html'">
+          🔙 Orqaga
+        </button>
       </div>
     </div>
 
@@ -139,7 +141,7 @@
             const result = await response.json();
             alert("✅ Ball muvaffaqiyatli saqlandi:", result);
           } catch (err) {
-            alert("❌ Ball saqlashda xatolik:", err);
+            console.error("❌ Ball saqlashda xatolik:", err);
           }
         } else {
           alert("⚠️ Telegram foydalanuvchi ID topilmadi");
@@ -272,14 +274,14 @@
             const reytingNum = document.createElement("span");
             reytingNum.classList.add("reytingnum");
             reytingNum.innerHTML = `${i + 1}`;
-            
+
             if (reytingNum.textContent === "1") {
-  reytingNum.textContent = "🥇";
-} else if (reytingNum.textContent === "2") {
-  reytingNum.textContent = "🥈";
-} else if (reytingNum.textContent === "3") {
-  reytingNum.textContent = "🥉";
-}
+              reytingNum.textContent = "🥇";
+            } else if (reytingNum.textContent === "2") {
+              reytingNum.textContent = "🥈";
+            } else if (reytingNum.textContent === "3") {
+              reytingNum.textContent = "🥉";
+            }
 
             // foydalanuvchi ismi va username
             const nameSpan = document.createElement("span");
