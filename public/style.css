@@ -46,11 +46,12 @@ body {
   gap: 20px;
 }
 .control-container {
-  background-color: rgb(38, 19, 112);
+  background-color: rgb(24, 10, 79);
   max-width: 500px;
   width: 100%;
   font-size: 1.2rem;
   display: flex;
+  border-radius: 30px;
   justify-content: space-around;
   padding: 15px 0;
 }
@@ -58,7 +59,8 @@ body {
   padding: 20px 0;
   max-width: 500px;
   width: 100%;
-  background-color: rgb(38, 19, 112);
+  background-color: rgb(24, 10, 79);
+  border-radius: 30px;
   margin: 0 auto;
 }
 .randomnumber {
@@ -76,7 +78,7 @@ body {
   padding: 0 10px;
 }
 .javob {
-  background-color: rgb(76, 76, 165);
+  background-color: rgb(33, 33, 135);
   max-width: 350px;
   width: 90%;
   text-align: center;
@@ -86,7 +88,7 @@ body {
 }
 
 .javob:active {
-  background-color: rgb(83, 83, 143);
+  background-color: rgb(38, 38, 122);
 }
 .time-container {
   height: 5px;
@@ -125,8 +127,13 @@ body {
 #ranking-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto; /* markazlashtirish */
+  padding: 0;
 }
+
 #ranking-list p {
   color: aliceblue;
   text-align: center;
@@ -175,7 +182,7 @@ body {
   width: 80%;
   font-size: 20px;
   font-weight: 600;
-  background-color: rgb(100, 100, 153);
+  background-color: rgb(78, 78, 186);
   border: none;
   color: white;
   border-radius: 8px;
@@ -218,14 +225,16 @@ body {
 }
 .daraja-1 {
   margin-top: 20px;
-  background-color: rgb(24, 24, 94);
+  background-color: rgb(9, 9, 68);
+
   padding: 1rem;
   border-radius: 20px;
   max-width: 500px;
   width: 100%;
 }
 .daraja-2 {
-  background-color: rgb(9, 10, 71);
+  background-color: rgb(9, 9, 68);
+
   padding: 1rem;
   border-radius: 20px;
   max-width: 500px;
@@ -246,14 +255,18 @@ body {
   font-size: 14px;
   margin-top: 0px;
 }
-.darajalar button {
+.daraja-btn {
   padding: 0.6rem 2rem;
   border: none;
   font-size: 20px;
   color: white;
   font-weight: 600;
-  background-color: rgb(41, 41, 148);
+  background-color: rgb(19, 19, 91);
   border: 1px solid white;
-  width: 50%;
+  width: 80%;
+  border-radius: 42px;
+  margin-top: 20px;
   cursor: pointer;
+  margin: 0 auto; /* markazlashtirish */
+  display: block; /* margin markazda ishlashi uchun */
 }
