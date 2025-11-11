@@ -194,3 +194,66 @@ body {
   border: 1px solid white;
   justify-content: center;
 }
+.daraja-boyicha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  gap: 20px;
+}
+.daraja-boyicha button {
+  border: none;
+  font-size: 20px;
+  color: white;
+  background: none;
+  cursor: pointer;
+}
+.darajalar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+  margin: 20px;
+}
+.daraja-1 {
+  margin-top: 20px;
+  background-color: rgb(24, 24, 94);
+  padding: 1rem;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 100%;
+}
+.daraja-2 {
+  background-color: rgb(9, 10, 71);
+  padding: 1rem;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 100%;
+}
+.daraja-3 {
+  background-color: rgb(9, 9, 68);
+  padding: 1rem;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 100%;
+}
+.darajalar h2 {
+  margin-bottom: 5px;
+  font-size: 20px;
+}
+.darajalar p {
+  font-size: 14px;
+  margin-top: 0px;
+}
+.darajalar button {
+  padding: 0.6rem 2rem;
+  border: none;
+  font-size: 20px;
+  color: white;
+  font-weight: 600;
+  background-color: rgb(41, 41, 148);
+  border: 1px solid white;
+  width: 50%;
+  cursor: pointer;
+}

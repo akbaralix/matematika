@@ -160,33 +160,49 @@ bot.on("message", async (msg) => {
 
 // Foydalanuvchi ballini saqlash
 app.post("/save-score", async (req, res) => {
-  const { user_id, name, avatar, score } = req.body;
+  const { user_id, name, avatar, score, level } = req.body;
 
   // user_id bo‘lmasa saqlashni to‘xtatish
   if (!user_id) return res.status(400).json({ error: "User ID yo‘q" });
 
-  const existing = await usersCollection.findOne({ user_id });
+  try {
+    const existing = await usersCollection.findOne({ user_id });
 
-  if (!existing) {
-    await usersCollection.insertOne({ user_id, name, avatar, score });
-  } else if (score > existing.score) {
-    await usersCollection.updateOne(
-      { user_id },
-      { $set: { score, name, avatar } }
-    );
+    if (!existing) {
+      // Yangi foydalanuvchi qo‘shish
+      await usersCollection.insertOne({ user_id, name, avatar, score, level });
+    } else {
+      // Mavjud foydalanuvchi uchun:
+      // 1️⃣ Score faqat yuqori bo‘lsa yangilanadi
+      // 2️⃣ Level, name va avatar har doim yangilanadi
+      const updateData = { name, avatar, level };
+      if (score > existing.score) updateData.score = score;
+
+      await usersCollection.updateOne({ user_id }, { $set: updateData });
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Score saqlashda xatolik:", err);
+    res.status(500).json({ error: "Server xatosi" });
   }
-
-  res.sendStatus(200);
 });
 
 // 🔹 Reyting olish (shu yo‘q edi!)
 app.get("/get-ranking", async (req, res) => {
+  const level = parseInt(req.query.level) || 1;
+
   try {
-    const users = await usersCollection.find().sort({ score: -1 }).toArray();
+    const users = await usersCollection
+      .find({ level: level }) // faqat tanlangan daraja
+      .sort({ score: -1 })
+      .limit(10)
+      .toArray();
+
     res.json(users);
   } catch (err) {
-    console.error("❌ Reyting olishda xatolik:", err);
-    res.status(500).json({ error: "Server xatosi" });
+    console.error(err);
+    res.json([]);
   }
 });
 
