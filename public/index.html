@@ -57,20 +57,13 @@
     <div class="statistika-container" style="display: none">
       <h2>Statistika</h2>
       <div class="user-statistik">
-        <h3>Daraja bo‘yicha ballar:</h3>
-        <ul>
-          <li>1-daraja: <span id="score1">0</span> ✅</li>
-          <li>2-daraja: <span id="score2">0</span> ✅</li>
-          <li>3-daraja: <span id="score3">0</span> ✅</li>
-        </ul>
-
         <h3>Top foydalanuvchilar:</h3>
         <div class="daraja-boyicha">
           <button onclick="statistika(1)">1-daraja</button>
           <button onclick="statistika(2)">2-daraja</button>
           <button onclick="statistika(3)">3-daraja</button>
         </div>
-        <div id="ranking-list"></div>
+        <ul id="ranking-list"></ul>
       </div>
       <button class="Orqaga" onclick="backToMenu()">🔙 Orqaga</button>
     </div>
@@ -230,8 +223,10 @@
         clearTimeout(timer);
         timer = null;
 
-        const scoreSpan = document.getElementById(`score${currentLevel}`);
-        if (scoreSpan) scoreSpan.textContent = togri;
+        document.querySelector(".game-end").style.display = "flex";
+        document.querySelector(".qaytaBoshlash").style.display = "block";
+        javoblar.forEach((el) => (el.style.pointerEvents = "none"));
+        document.querySelector(".time").style.display = "none";
 
         if (TELEGRAM_USER_ID) {
           try {
@@ -250,11 +245,6 @@
             console.error("❌ Saqlash xatosi:", e);
           }
         }
-
-        document.querySelector(".game-end").style.display = "flex";
-        document.querySelector(".qaytaBoshlash").style.display = "block";
-        javoblar.forEach((el) => (el.style.pointerEvents = "none"));
-        document.querySelector(".time").style.display = "none";
       }
 
       function qaytaBoshlash() {
@@ -270,15 +260,15 @@
         startProgress();
       }
 
-      // Statistika oynasini ochish va darajaga qarab ko'rsatish
+      // ================================
+      // 🔹 Statistika oynasi
+      // ================================
       async function statistika(level = 1) {
         document.getElementById("menyu").style.display = "none";
         document.querySelector(".statistika-container").style.display = "block";
-
-        await getRanking(level); // faqat tanlangan daraja
+        await getRanking(level);
       }
 
-      // Foydalanuvchilar ro'yxatini olish
       async function getRanking(level = 1) {
         const rankingList = document.getElementById("ranking-list");
         rankingList.innerHTML = "<p>Yuklanmoqda...</p>";
@@ -290,14 +280,14 @@
           const data = await res.json();
           rankingList.innerHTML = "";
 
-          // Agar foydalanuvchi yo'q bo'lsa
           if (!data || data.length === 0) {
             rankingList.innerHTML = `<p>❌ ${level}-darajada foydalanuvchi yo‘q</p>`;
             return;
           }
 
           data.forEach((user, i) => {
-            if (!user.score) return;
+            if (!user.scores || user.scores[level] === undefined) return;
+
             const li = document.createElement("li");
             li.style.display = "flex";
             li.style.alignItems = "center";
@@ -322,7 +312,7 @@
 
             const scoreSpan = document.createElement("span");
             scoreSpan.style.marginLeft = "auto";
-            scoreSpan.textContent = `${user.score} ✅`;
+            scoreSpan.textContent = `${user.scores[level]} ✅`;
 
             li.append(reytingNum, img, nameSpan, scoreSpan);
             rankingList.appendChild(li);

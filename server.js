@@ -10,7 +10,7 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const DATABASE_URL = process.env.DATABASE_URL;
 const ADMIN_ID = Number(process.env.ADMIN_ID);
-const URL = process.env.URL || "https://matematika.onrender.com"; // Render URL
+const URL = process.env.URL || "https://matematika.onrender.com";
 const PORT = process.env.PORT || 3000;
 
 const bot = new TelegramBot(TOKEN);
@@ -27,14 +27,12 @@ const db = client.db("mydatabase");
 const usersCollection = db.collection("users");
 
 // ====================== EXPRESS ROUTES ======================
-
-// Static fayllar (index.html)
 app.use(express.static(path.join(path.resolve(), "public")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(path.resolve(), "public", "index.html"));
 });
 
-// Telegram webhook endpoint
+// Telegram webhook
 bot.setWebHook(`${URL}/bot${TOKEN}`);
 app.post(`/bot${TOKEN}`, (req, res) => {
   bot.processUpdate(req.body);
@@ -42,7 +40,6 @@ app.post(`/bot${TOKEN}`, (req, res) => {
 });
 
 // ====================== TELEGRAM BOT ======================
-
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
@@ -58,7 +55,7 @@ bot.on("message", async (msg) => {
         name: `${firstName} ${lastName}`.trim(),
         username: msg.from.username || "",
         joined_at: new Date(),
-        score: 0,
+        scores: { 1: 0, 2: 0, 3: 0 }, // har daraja uchun ball
       });
     }
 
@@ -115,12 +112,12 @@ bot.on("message", async (msg) => {
   if (text === "🏆 Reyting") {
     const topUsers = await usersCollection
       .find()
-      .sort({ score: -1 })
+      .sort({ "scores.1": -1 }) // default 1-daraja reyting
       .limit(5)
       .toArray();
     let msgText = "🏆 Top foydalanuvchilar:\n\n";
     topUsers.forEach((user, i) => {
-      msgText += `${i + 1}. ${user.name} — ${user.score} ✅\n`;
+      msgText += `${i + 1}. ${user.name} — ${user.scores["1"]} ✅\n`;
     });
 
     bot.sendMessage(chatId, msgText);
@@ -156,46 +153,44 @@ bot.on("message", async (msg) => {
 
 // ====================== SERVER ======================
 
-// ====================== SERVER ======================
-
-// Foydalanuvchi ballini saqlash
+// Ball saqlash
 app.post("/save-score", async (req, res) => {
-  const { user_id, name, avatar, score, level } = req.body;
+  const { user_id, score, level } = req.body;
 
-  // user_id bo‘lmasa saqlashni to‘xtatish
-  if (!user_id) return res.status(400).json({ error: "User ID yo‘q" });
+  if (!user_id || !level)
+    return res.status(400).json({ error: "Ma'lumot yetarli emas" });
 
   try {
     const existing = await usersCollection.findOne({ user_id });
-
     if (!existing) {
-      // Yangi foydalanuvchi qo‘shish
-      await usersCollection.insertOne({ user_id, name, avatar, score, level });
+      const scores = { 1: 0, 2: 0, 3: 0 };
+      scores[level] = score;
+      await usersCollection.insertOne({ user_id, scores });
     } else {
-      // Mavjud foydalanuvchi uchun:
-      // 1️⃣ Score faqat yuqori bo‘lsa yangilanadi
-      // 2️⃣ Level, name va avatar har doim yangilanadi
-      const updateData = { name, avatar, level };
-      if (score > existing.score) updateData.score = score;
-
-      await usersCollection.updateOne({ user_id }, { $set: updateData });
+      const currentScore = existing.scores?.[level] || 0;
+      if (score > currentScore) {
+        await usersCollection.updateOne(
+          { user_id },
+          { $set: { [`scores.${level}`]: score } }
+        );
+      }
     }
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Score saqlashda xatolik:", err);
+    console.error(err);
     res.status(500).json({ error: "Server xatosi" });
   }
 });
 
-// 🔹 Reyting olish (shu yo‘q edi!)
+// Reyting olish
 app.get("/get-ranking", async (req, res) => {
   const level = parseInt(req.query.level) || 1;
 
   try {
     const users = await usersCollection
-      .find({ level: level }) // faqat tanlangan daraja
-      .sort({ score: -1 })
+      .find({ [`scores.${level}`]: { $exists: true } })
+      .sort({ [`scores.${level}`]: -1 })
       .limit(10)
       .toArray();
 
